@@ -1,0 +1,7 @@
+﻿using Mango.AuthService.Domain.Entities;
+
+public interface IUserRepository
+{
+  Task<User?> GetByEmailAsync(string email);
+  Task CreateAsync(User user);
+}
