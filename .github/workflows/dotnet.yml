@@ -38,6 +38,7 @@ jobs:
       run: dotnet test --no-build --verbosity normal
  # Login to AWS
     - name: Configure AWS credentials
+      if: github.ref == 'refs/heads/master'
       uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -46,11 +47,13 @@ jobs:
 
     # Login to Amazon ECR
     - name: Login to Amazon ECR
+      if: github.ref == 'refs/heads/master'
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
 
     # Build, tag, and push the Docker image to ECR
     - name: Build, tag, and push image to ECR
+      if: github.ref == 'refs/heads/master'
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         IMAGE_TAG: ${{ github.sha }}
@@ -60,6 +63,7 @@ jobs:
 
     # Deploy to Amazon ECS
     - name: Render Amazon ECS task definition
+      if: github.ref == 'refs/heads/master'
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       id: task-def
       with:
@@ -68,6 +72,7 @@ jobs:
         image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
 
     - name: Update ECS service
+      if: github.ref == 'refs/heads/master'
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         cluster: ${{ env.ECS_CLUSTER }}
