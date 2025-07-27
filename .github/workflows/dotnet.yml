@@ -77,4 +77,4 @@ jobs:
       with:
         cluster: ${{ env.ECS_CLUSTER }}
         service: ${{ env.ECS_SERVICE }}
-        task-definition: ${{ steps.task-def.outputs.task-definition-arn }}
+        task-definition: ${{ steps.task-def.outputs.task-definition}}
