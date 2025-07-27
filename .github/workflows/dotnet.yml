@@ -9,20 +9,72 @@ on:
   pull_request:
     branches: [ "dev","master" ]
 
+env:
+  AWS_REGION: us-east-1                # <-- Change as needed
+  ECR_REPOSITORY: mango-auth-service     # <-- Your ECR repo name
+  ECS_SERVICE: mango-auth-service-task-service     # <-- Your ECS service name
+  ECS_CLUSTER: mango-cluster     # <-- Your ECS cluster name
+  CONTAINER_NAME: mango-auth-service-container     # <-- Name in your ECS task definition
+
 jobs:
-  build:
+  build-and-test:
 
     runs-on: ubuntu-latest
 
     steps:
+      # This step checks out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v4
+      # This step sets up the .NET environment
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 9.0.x
+    # This step restores dependencies, builds the project, and runs tests
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
+ # Login to AWS
+    - name: Configure AWS credentials
+      if: github.ref == 'refs/heads/master'
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    # Login to Amazon ECR
+    - name: Login to Amazon ECR
+      if: github.ref == 'refs/heads/master'
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    # Build, tag, and push the Docker image to ECR
+    - name: Build, tag, and push image to ECR
+      if: github.ref == 'refs/heads/master'
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -f Mango.AuthService.API/Dockerfile -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
+
+    # Deploy to Amazon ECS
+    - name: Render Amazon ECS task definition
+      if: github.ref == 'refs/heads/master'
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      id: task-def
+      with:
+        task-definition: mango-auth-service-task.json               # <-- Path to your ECS task definition file
+        container-name: ${{ env.CONTAINER_NAME }}
+        image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+
+    - name: Update ECS service
+      if: github.ref == 'refs/heads/master'
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        cluster: ${{ env.ECS_CLUSTER }}
+        service: ${{ env.ECS_SERVICE }}
+        task-definition: ${{ steps.task-def.outputs.task-definition-arn }}
