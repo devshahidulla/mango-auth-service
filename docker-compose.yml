@@ -1,0 +1,37 @@
+services:
+  # Auth Service API
+  auth-api:
+    build:
+      context: .
+      dockerfile: Mango.AuthService.API/Dockerfile
+    image: mango-auth-service-api:latest
+    container_name: mango-auth-api
+    ports:
+      - "5180:5180"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:5180
+      ConnectionStrings__DefaultConnection: "Host=host.docker.internal;Port=5432;Database=mango_auth_service;Username=postgres;Password=adminpassword"
+      AWS__SqsUserRegisteredQueueUrl: "https://sqs.us-east-1.amazonaws.com/047126776248/mango-auth-queue"
+      AWS__Region: "us-east-1"
+      AWS_SHARED_CREDENTIALS_FILE: /root/.aws/credentials
+      AWS_CONFIG_FILE: /root/.aws/config
+      JwtSettings__Issuer: "Mango.AuthService"
+      JwtSettings__Audience: "Mango.Marketplace"
+      JwtSettings__ExpiryMinutes: "60"
+      JwtSettings__SecretKey: "m8VxF3eTz9QkBp1LuYdCgRhXs2WnA7jE"
+    volumes:
+      - ${USERPROFILE}/.aws:/root/.aws:ro
+    networks:
+      - mango-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5180/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  mango-network:
+    driver: bridge
