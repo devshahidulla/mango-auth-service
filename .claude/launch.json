@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Auth Service (HTTP)",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "Mango.AuthService.API/Mango.AuthService.API.csproj", "--launch-profile", "http"],
+      "port": 5180
+    },
+    {
+      "name": "Auth Service (Docker)",
+      "runtimeExecutable": "docker-compose",
+      "runtimeArgs": ["up", "--build"],
+      "port": 5180
+    }
+  ]
+}
