@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose down)",
+      "Bash(docker ps -a --filter \"name=mango-auth-api\" --format \"{{.ID}} {{.Names}} {{.Status}}\")",
+      "Bash(docker rm -f mango-auth-api)",
+      "Bash(docker compose up --build -d)",
+      "Bash(docker ps --filter \"name=mango-auth-api\" --format \"table {{.Names}}\\\\t{{.Status}}\\\\t{{.Ports}}\")"
+    ]
+  }
+}

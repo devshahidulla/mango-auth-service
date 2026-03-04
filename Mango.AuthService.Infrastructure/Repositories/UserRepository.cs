@@ -23,7 +23,7 @@ public class UserRepository : IUserRepository
   password_hash AS ""PasswordHash"",
   role AS ""Role"",
   created_at AS ""CreatedAt""
-FROM auth_users
+FROM users
 WHERE email = @Email
  LIMIT 1";
     return await _dbConnection.QueryFirstOrDefaultAsync<User>(sql, new { Email = email });
@@ -31,7 +31,7 @@ WHERE email = @Email
 
   public async Task CreateAsync(User user)
   {
-    const string sql = @"INSERT INTO auth_users (user_id, email, password_hash, role, full_name, created_at)
+    const string sql = @"INSERT INTO users (user_id, email, password_hash, role, full_name, created_at)
                          VALUES (@UserId, @Email, @PasswordHash, @Role, @FullName, @CreatedAt)";
     await _dbConnection.ExecuteAsync(sql, user);
   }
