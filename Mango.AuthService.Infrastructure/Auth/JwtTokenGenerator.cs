@@ -21,9 +21,10 @@ public class JwtTokenGenerator : IJwtTokenGenerator
   {
     var claims = new[]
     {
-           new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()), // Fixed 'Id' to 'UserId'  
+           new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
            new Claim(JwtRegisteredClaimNames.Email, user.Email),
            new Claim(ClaimTypes.Role, user.Role),
+           new Claim("full_name", user.FullName ?? ""),
        };
 
     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
